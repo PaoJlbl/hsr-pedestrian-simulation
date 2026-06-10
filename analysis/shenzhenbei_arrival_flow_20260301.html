@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>深圳北到达客流 15 分钟粒度</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #637083;
+      --grid: #dce3ea;
+      --line: #0f766e;
+      --line-soft: rgba(15, 118, 110, 0.14);
+      --accent: #c2410c;
+      --shadow: rgba(17, 24, 39, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    main {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 24px;
+    }
+    .topbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(22px, 2.4vw, 34px);
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(116px, 1fr));
+      gap: 10px;
+      min-width: min(640px, 100%);
+    }
+    .stat {
+      background: var(--panel);
+      border: 1px solid #e5eaf0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      box-shadow: 0 8px 22px var(--shadow);
+    }
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .stat strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+    .chart-wrap {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid #e1e7ee;
+      border-radius: 8px;
+      padding: 16px 16px 8px;
+      box-shadow: 0 12px 30px var(--shadow);
+      overflow: hidden;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      height: min(68vh, 680px);
+      min-height: 430px;
+    }
+    .axis text {
+      fill: var(--muted);
+      font-size: 13px;
+    }
+    .grid line {
+      stroke: var(--grid);
+      stroke-width: 1;
+    }
+    .axis-line {
+      stroke: #9aa8b7;
+      stroke-width: 1;
+    }
+    .flow-area {
+      fill: var(--line-soft);
+    }
+    .flow-line {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 3;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+    .hover-band {
+      fill: transparent;
+      cursor: crosshair;
+    }
+    .hover-band:hover {
+      fill: rgba(15, 118, 110, 0.045);
+    }
+    .focus-line {
+      stroke: var(--accent);
+      stroke-width: 1.5;
+      stroke-dasharray: 5 5;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .focus-dot {
+      fill: var(--accent);
+      stroke: #fff;
+      stroke-width: 3;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .tooltip {
+      position: fixed;
+      z-index: 10;
+      min-width: 280px;
+      max-width: min(420px, calc(100vw - 32px));
+      max-height: min(520px, calc(100vh - 32px));
+      overflow: auto;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid #d6dee7;
+      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, -105%);
+    }
+    .tooltip h2 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+    .tooltip .total {
+      color: var(--line);
+      font-weight: 760;
+      margin-bottom: 8px;
+    }
+    .tooltip table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .tooltip th, .tooltip td {
+      padding: 5px 4px;
+      border-bottom: 1px solid #edf1f5;
+      text-align: left;
+      vertical-align: top;
+    }
+    .tooltip th:last-child,
+    .tooltip td:last-child {
+      text-align: right;
+      white-space: nowrap;
+    }
+    .empty {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .footnote {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 10px 4px 0;
+    }
+    @media (max-width: 900px) {
+      main { padding: 14px; }
+      .topbar { display: block; }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 14px; }
+      svg { min-height: 480px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="topbar">
+      <div>
+        <h1>深圳北到达客流曲线</h1>
+        <div class="subtitle">2026-03-01，每 15 分钟聚合一次，纵轴为到达深圳北站客流量</div>
+      </div>
+      <div class="stats" aria-label="统计摘要">
+        <div class="stat"><span>总到达客流</span><strong id="totalPax"></strong></div>
+        <div class="stat"><span>涉及车次</span><strong id="trainCount"></strong></div>
+        <div class="stat"><span>峰值时间段</span><strong id="peakLabel"></strong></div>
+        <div class="stat"><span>峰值客流</span><strong id="peakTotal"></strong></div>
+      </div>
+    </section>
+
+    <section class="chart-wrap">
+      <svg id="chart" viewBox="0 0 1200 640" role="img" aria-label="深圳北站 15 分钟到达客流折线图"></svg>
+      <div id="tooltip" class="tooltip" aria-hidden="true"></div>
+      <div class="footnote">数据来源：2 到达客流统计.xlsx；使用“深圳北”分组下“小计”列，按“下车时间”分箱。</div>
+    </section>
+  </main>
+
+  <script>
+    const data = {"bins": [{"start": 0, "end": 15, "label": "00:00-00:15", "total": 1569, "trains": [{"row": 967, "train": "G4117", "route": "南宁东－深圳北", "arrival": "00:01", "pax": 1305, "binStart": 0}, {"row": 2124, "train": "G9723", "route": "广州南－深圳北", "arrival": "00:06", "pax": 264, "binStart": 0}]}, {"start": 15, "end": 30, "label": "00:15-00:30", "total": 1249, "trains": [{"row": 2125, "train": "G9725", "route": "长沙南－深圳北", "arrival": "00:22", "pax": 1249, "binStart": 15}]}, {"start": 30, "end": 45, "label": "00:30-00:45", "total": 628, "trains": [{"row": 2417, "train": "C7267", "route": "怀化南－深圳北", "arrival": "00:41", "pax": 628, "binStart": 30}]}, {"start": 45, "end": 60, "label": "00:45-01:00", "total": 1158, "trains": [{"row": 2327, "train": "C7175", "route": "岳阳东－深圳北", "arrival": "00:45", "pax": 1158, "binStart": 45}]}, {"start": 60, "end": 75, "label": "01:00-01:15", "total": 0, "trains": []}, {"start": 75, "end": 90, "label": "01:15-01:30", "total": 0, "trains": []}, {"start": 90, "end": 105, "label": "01:30-01:45", "total": 0, "trains": []}, {"start": 105, "end": 120, "label": "01:45-02:00", "total": 0, "trains": []}, {"start": 120, "end": 135, "label": "02:00-02:15", "total": 0, "trains": []}, {"start": 135, "end": 150, "label": "02:15-02:30", "total": 0, "trains": []}, {"start": 150, "end": 165, "label": "02:30-02:45", "total": 0, "trains": []}, {"start": 165, "end": 180, "label": "02:45-03:00", "total": 0, "trains": []}, {"start": 180, "end": 195, "label": "03:00-03:15", "total": 0, "trains": []}, {"start": 195, "end": 210, "label": "03:15-03:30", "total": 0, "trains": []}, {"start": 210, "end": 225, "label": "03:30-03:45", "total": 0, "trains": []}, {"start": 225, "end": 240, "label": "03:45-04:00", "total": 0, "trains": []}, {"start": 240, "end": 255, "label": "04:00-04:15", "total": 0, "trains": []}, {"start": 255, "end": 270, "label": "04:15-04:30", "total": 0, "trains": []}, {"start": 270, "end": 285, "label": "04:30-04:45", "total": 0, "trains": []}, {"start": 285, "end": 300, "label": "04:45-05:00", "total": 0, "trains": []}, {"start": 300, "end": 315, "label": "05:00-05:15", "total": 0, "trains": []}, {"start": 315, "end": 330, "label": "05:15-05:30", "total": 0, "trains": []}, {"start": 330, "end": 345, "label": "05:30-05:45", "total": 0, "trains": []}, {"start": 345, "end": 360, "label": "05:45-06:00", "total": 0, "trains": []}, {"start": 360, "end": 375, "label": "06:00-06:15", "total": 0, "trains": []}, {"start": 375, "end": 390, "label": "06:15-06:30", "total": 211, "trains": [{"row": 2693, "train": "D941", "route": "上海虹桥－珠海", "arrival": "06:15", "pax": 211, "binStart": 375}]}, {"start": 390, "end": 405, "label": "06:30-06:45", "total": 548, "trains": [{"row": 2690, "train": "D935", "route": "上海虹桥－广州南", "arrival": "06:30", "pax": 256, "binStart": 390}, {"row": 3565, "train": "D7558", "route": "福田－广州东", "arrival": "06:32", "pax": 12, "binStart": 390}, {"row": 2671, "train": "D913", "route": "上海－惠州北", "arrival": "06:37", "pax": 280, "binStart": 390}]}, {"start": 405, "end": 420, "label": "06:45-07:00", "total": 0, "trains": []}, {"start": 420, "end": 435, "label": "07:00-07:15", "total": 2, "trains": [{"row": 60, "train": "G636", "route": "福田－合肥南", "arrival": "07:03", "pax": 1, "binStart": 420}, {"row": 3596, "train": "D7568", "route": "福田－广州", "arrival": "07:08", "pax": 1, "binStart": 420}]}, {"start": 435, "end": 450, "label": "07:15-07:30", "total": 0, "trains": []}, {"start": 450, "end": 465, "label": "07:30-07:45", "total": 4, "trains": [{"row": 426, "train": "G2710", "route": "福田－武汉", "arrival": "07:31", "pax": 1, "binStart": 450}, {"row": 2035, "train": "G8452", "route": "福田－梅州西", "arrival": "07:39", "pax": 3, "binStart": 450}]}, {"start": 465, "end": 480, "label": "07:45-08:00", "total": 525, "trains": [{"row": 2426, "train": "C7299", "route": "惠州北－深圳北", "arrival": "07:50", "pax": 66, "binStart": 465}, {"row": 1384, "train": "G6207", "route": "广州南－深圳北", "arrival": "07:56", "pax": 128, "binStart": 465}, {"row": 2663, "train": "D903", "route": "北京西－深圳北", "arrival": "07:57", "pax": 331, "binStart": 465}]}, {"start": 480, "end": 495, "label": "08:00-08:15", "total": 0, "trains": []}, {"start": 495, "end": 510, "label": "08:15-08:30", "total": 975, "trains": [{"row": 2660, "train": "D901", "route": "北京西－深圳北", "arrival": "08:18", "pax": 372, "binStart": 495}, {"row": 1423, "train": "G6231", "route": "韶关－深圳北", "arrival": "08:23", "pax": 504, "binStart": 495}, {"row": 3501, "train": "D7417", "route": "惠州北－深圳北", "arrival": "08:25", "pax": 99, "binStart": 495}]}, {"start": 510, "end": 525, "label": "08:30-08:45", "total": 334, "trains": [{"row": 3649, "train": "D7591", "route": "广州东－福田", "arrival": "08:32", "pax": 147, "binStart": 510}, {"row": 1457, "train": "G6253", "route": "广州南－深圳北", "arrival": "08:35", "pax": 187, "binStart": 510}]}, {"start": 525, "end": 540, "label": "08:45-09:00", "total": 0, "trains": []}, {"start": 540, "end": 555, "label": "09:00-09:15", "total": 489, "trains": [{"row": 2486, "train": "C8859", "route": "梅州西－深圳北", "arrival": "09:03", "pax": 489, "binStart": 540}]}, {"start": 555, "end": 570, "label": "09:15-09:30", "total": 794, "trains": [{"row": 2696, "train": "D962", "route": "成都东－深圳北", "arrival": "09:17", "pax": 498, "binStart": 555}, {"row": 3652, "train": "D7592", "route": "福田－广州东", "arrival": "09:21", "pax": 1, "binStart": 555}, {"row": 1406, "train": "G6219", "route": "广州南－深圳北", "arrival": "09:25", "pax": 295, "binStart": 555}]}, {"start": 570, "end": 585, "label": "09:30-09:45", "total": 0, "trains": []}, {"start": 585, "end": 600, "label": "09:45-10:00", "total": 0, "trains": []}, {"start": 600, "end": 615, "label": "10:00-10:15", "total": 730, "trains": [{"row": 463, "train": "G2728", "route": "福田－南昌西", "arrival": "10:08", "pax": 4, "binStart": 600}, {"row": 2469, "train": "C8855", "route": "河源东－深圳北", "arrival": "10:09", "pax": 725, "binStart": 600}, {"row": 3571, "train": "D7560", "route": "福田－广州东", "arrival": "10:14", "pax": 1, "binStart": 600}]}, {"start": 615, "end": 630, "label": "10:15-10:30", "total": 671, "trains": [{"row": 593, "train": "G2776", "route": "福田－九江", "arrival": "10:18", "pax": 3, "binStart": 615}, {"row": 1441, "train": "G6241", "route": "广州南－深圳北", "arrival": "10:19", "pax": 668, "binStart": 615}]}, {"start": 630, "end": 645, "label": "10:30-10:45", "total": 0, "trains": []}, {"start": 645, "end": 660, "label": "10:45-11:00", "total": 0, "trains": []}, {"start": 660, "end": 675, "label": "11:00-11:15", "total": 126, "trains": [{"row": 2480, "train": "C8857", "route": "惠州北－深圳北", "arrival": "11:09", "pax": 126, "binStart": 660}]}, {"start": 675, "end": 690, "label": "11:15-11:30", "total": 490, "trains": [{"row": 3602, "train": "D7570", "route": "福田－广州东", "arrival": "11:15", "pax": 1, "binStart": 675}, {"row": 3631, "train": "D7579", "route": "广州东－福田", "arrival": "11:23", "pax": 485, "binStart": 675}, {"row": 3542, "train": "D7486", "route": "福田－广州东", "arrival": "11:26", "pax": 4, "binStart": 675}]}, {"start": 690, "end": 705, "label": "11:30-11:45", "total": 1316, "trains": [{"row": 1196, "train": "G6001", "route": "长沙南－深圳北", "arrival": "11:39", "pax": 1316, "binStart": 690}]}, {"start": 705, "end": 720, "label": "11:45-12:00", "total": 1266, "trains": [{"row": 456, "train": "G2725", "route": "南昌西－深圳北", "arrival": "11:47", "pax": 667, "binStart": 705}, {"row": 452, "train": "G2723", "route": "南昌西－福田", "arrival": "11:58", "pax": 599, "binStart": 705}]}, {"start": 720, "end": 735, "label": "12:00-12:15", "total": 2524, "trains": [{"row": 670, "train": "G2911", "route": "南宁东－深圳北", "arrival": "12:01", "pax": 1216, "binStart": 720}, {"row": 3634, "train": "D7580", "route": "福田－广州东", "arrival": "12:06", "pax": 23, "binStart": 720}, {"row": 29, "train": "G389", "route": "武汉－深圳北", "arrival": "12:09", "pax": 1285, "binStart": 720}]}, {"start": 735, "end": 750, "label": "12:15-12:30", "total": 308, "trains": [{"row": 3655, "train": "D7593", "route": "广州东－福田", "arrival": "12:26", "pax": 308, "binStart": 735}]}, {"start": 750, "end": 765, "label": "12:30-12:45", "total": 2498, "trains": [{"row": 936, "train": "G4103", "route": "赣州西－深圳北", "arrival": "12:30", "pax": 478, "binStart": 750}, {"row": 1199, "train": "G6003", "route": "长沙南－深圳北", "arrival": "12:35", "pax": 1358, "binStart": 750}, {"row": 2030, "train": "G8451", "route": "梅州西－福田", "arrival": "12:35", "pax": 364, "binStart": 750}, {"row": 2418, "train": "C7291", "route": "惠州北－深圳北", "arrival": "12:39", "pax": 298, "binStart": 750}]}, {"start": 765, "end": 780, "label": "12:45-13:00", "total": 3, "trains": [{"row": 368, "train": "G2282", "route": "福田－郑州东", "arrival": "12:47", "pax": 3, "binStart": 765}]}, {"start": 780, "end": 795, "label": "13:00-13:15", "total": 2175, "trains": [{"row": 31, "train": "G391", "route": "武汉－深圳北", "arrival": "13:01", "pax": 1245, "binStart": 780}, {"row": 3658, "train": "D7594", "route": "福田－广州", "arrival": "13:03", "pax": 2, "binStart": 780}, {"row": 360, "train": "G2270", "route": "长沙南－深圳北", "arrival": "13:05", "pax": 633, "binStart": 780}, {"row": 3574, "train": "D7561", "route": "广州东－福田", "arrival": "13:10", "pax": 295, "binStart": 780}]}, {"start": 795, "end": 810, "label": "13:15-13:30", "total": 2, "trains": [{"row": 2051, "train": "G8458", "route": "福田－揭阳", "arrival": "13:22", "pax": 2, "binStart": 795}]}, {"start": 810, "end": 825, "label": "13:30-13:45", "total": 0, "trains": []}, {"start": 825, "end": 840, "label": "13:45-14:00", "total": 3, "trains": [{"row": 3577, "train": "D7562", "route": "福田－广州东", "arrival": "13:51", "pax": 3, "binStart": 825}]}, {"start": 840, "end": 855, "label": "14:00-14:15", "total": 1082, "trains": [{"row": 585, "train": "G2774", "route": "萍乡北－深圳北", "arrival": "14:05", "pax": 1082, "binStart": 840}]}, {"start": 855, "end": 870, "label": "14:15-14:30", "total": 637, "trains": [{"row": 2057, "train": "G8460", "route": "揭阳－深圳北", "arrival": "14:28", "pax": 637, "binStart": 855}]}, {"start": 870, "end": 885, "label": "14:30-14:45", "total": 4699, "trains": [{"row": 398, "train": "G2703", "route": "武汉－深圳北", "arrival": "14:34", "pax": 1104, "binStart": 870}, {"row": 1290, "train": "G6078", "route": "永州－深圳北", "arrival": "14:38", "pax": 1295, "binStart": 870}, {"row": 1456, "train": "G6251", "route": "广州南－深圳北", "arrival": "14:41", "pax": 1437, "binStart": 870}, {"row": 184, "train": "G997", "route": "上海南－深圳北", "arrival": "14:42", "pax": 863, "binStart": 870}]}, {"start": 885, "end": 900, "label": "14:45-15:00", "total": 1119, "trains": [{"row": 193, "train": "G1005", "route": "武汉－深圳北", "arrival": "14:45", "pax": 1119, "binStart": 885}]}, {"start": 900, "end": 915, "label": "15:00-15:15", "total": 7, "trains": [{"row": 3609, "train": "D7572", "route": "福田－广州东", "arrival": "15:02", "pax": 7, "binStart": 900}]}, {"start": 915, "end": 930, "label": "15:15-15:30", "total": 449, "trains": [{"row": 3637, "train": "D7581", "route": "广州东－福田", "arrival": "15:21", "pax": 449, "binStart": 915}]}, {"start": 930, "end": 945, "label": "15:30-15:45", "total": 2, "trains": [{"row": 3549, "train": "D7488", "route": "福田－广州东", "arrival": "15:41", "pax": 2, "binStart": 930}]}, {"start": 945, "end": 960, "label": "15:45-16:00", "total": 2069, "trains": [{"row": 677, "train": "G2924", "route": "昆明南－深圳北", "arrival": "15:47", "pax": 989, "binStart": 945}, {"row": 260, "train": "G1188", "route": "洛阳龙门－深圳北", "arrival": "15:55", "pax": 1075, "binStart": 945}, {"row": 3640, "train": "D7582", "route": "福田－广州东", "arrival": "15:57", "pax": 5, "binStart": 945}]}, {"start": 960, "end": 975, "label": "16:00-16:15", "total": 478, "trains": [{"row": 3660, "train": "D7595", "route": "广州－福田", "arrival": "16:12", "pax": 478, "binStart": 960}]}, {"start": 975, "end": 990, "label": "16:15-16:30", "total": 1346, "trains": [{"row": 487, "train": "G2735", "route": "婺源－深圳北", "arrival": "16:20", "pax": 731, "binStart": 975}, {"row": 2041, "train": "G8453", "route": "梅州西－深圳北", "arrival": "16:28", "pax": 615, "binStart": 975}]}, {"start": 990, "end": 1005, "label": "16:30-16:45", "total": 2905, "trains": [{"row": 363, "train": "G2281", "route": "郑州东－深圳北", "arrival": "16:36", "pax": 1165, "binStart": 990}, {"row": 1207, "train": "G6009", "route": "长沙南－深圳北", "arrival": "16:41", "pax": 1276, "binStart": 990}, {"row": 3580, "train": "D7563", "route": "广州东－福田", "arrival": "16:42", "pax": 464, "binStart": 990}]}, {"start": 1005, "end": 1020, "label": "16:45-17:00", "total": 907, "trains": [{"row": 950, "train": "G4107", "route": "赣州西－深圳北", "arrival": "16:45", "pax": 514, "binStart": 1005}, {"row": 1362, "train": "G6183", "route": "长沙南－惠阳", "arrival": "16:45", "pax": 389, "binStart": 1005}, {"row": 3663, "train": "D7596", "route": "福田－广州东", "arrival": "16:54", "pax": 4, "binStart": 1005}]}, {"start": 1020, "end": 1035, "label": "17:00-17:15", "total": 2284, "trains": [{"row": 40, "train": "G397", "route": "武汉－深圳北", "arrival": "17:08", "pax": 1222, "binStart": 1020}, {"row": 416, "train": "G2707", "route": "武汉－深圳北", "arrival": "17:14", "pax": 1062, "binStart": 1020}]}, {"start": 1035, "end": 1050, "label": "17:15-17:30", "total": 0, "trains": []}, {"start": 1050, "end": 1065, "label": "17:30-17:45", "total": 575, "trains": [{"row": 3612, "train": "D7573", "route": "广州东－福田", "arrival": "17:41", "pax": 564, "binStart": 1050}, {"row": 3583, "train": "D7564", "route": "福田－广州东", "arrival": "17:42", "pax": 11, "binStart": 1050}]}, {"start": 1065, "end": 1080, "label": "17:45-18:00", "total": 2065, "trains": [{"row": 390, "train": "G2697", "route": "济南西－深圳北", "arrival": "17:46", "pax": 583, "binStart": 1065}, {"row": 1414, "train": "G6227", "route": "广州南－深圳北", "arrival": "17:59", "pax": 1482, "binStart": 1065}]}, {"start": 1080, "end": 1095, "label": "18:00-18:15", "total": 465, "trains": [{"row": 853, "train": "G3327", "route": "连云港－深圳北", "arrival": "18:14", "pax": 465, "binStart": 1080}]}, {"start": 1095, "end": 1110, "label": "18:15-18:30", "total": 430, "trains": [{"row": 1326, "train": "G6121", "route": "怀化南－福田", "arrival": "18:21", "pax": 430, "binStart": 1095}]}, {"start": 1110, "end": 1125, "label": "18:30-18:45", "total": 3240, "trains": [{"row": 507, "train": "G2741", "route": "南昌西－深圳北", "arrival": "18:30", "pax": 659, "binStart": 1110}, {"row": 1244, "train": "G6033", "route": "洞口－深圳北", "arrival": "18:31", "pax": 1287, "binStart": 1110}, {"row": 3615, "train": "D7574", "route": "福田－广州东", "arrival": "18:34", "pax": 7, "binStart": 1110}, {"row": 3552, "train": "D7489", "route": "广州东－福田", "arrival": "18:40", "pax": 322, "binStart": 1110}, {"row": 214, "train": "G1025", "route": "北京西－福田", "arrival": "18:41", "pax": 965, "binStart": 1110}]}, {"start": 1125, "end": 1140, "label": "18:45-19:00", "total": 381, "trains": [{"row": 3643, "train": "D7583", "route": "广州东－福田", "arrival": "18:47", "pax": 381, "binStart": 1125}]}, {"start": 1140, "end": 1155, "label": "19:00-19:15", "total": 2658, "trains": [{"row": 1647, "train": "G6412", "route": "福田－汕头", "arrival": "19:01", "pax": 8, "binStart": 1140}, {"row": 2526, "train": "D377", "route": "上海南－深圳北", "arrival": "19:04", "pax": 1287, "binStart": 1140}, {"row": 1330, "train": "G6128", "route": "永州－深圳北", "arrival": "19:08", "pax": 1363, "binStart": 1140}]}, {"start": 1155, "end": 1170, "label": "19:15-19:30", "total": 6, "trains": [{"row": 1432, "train": "G6236", "route": "福田－广州南", "arrival": "19:23", "pax": 6, "binStart": 1155}]}, {"start": 1170, "end": 1185, "label": "19:30-19:45", "total": 656, "trains": [{"row": 3646, "train": "D7584", "route": "福田－广州东", "arrival": "19:33", "pax": 1, "binStart": 1170}, {"row": 523, "train": "G2745", "route": "南昌西－深圳北", "arrival": "19:37", "pax": 655, "binStart": 1170}]}, {"start": 1185, "end": 1200, "label": "19:45-20:00", "total": 560, "trains": [{"row": 3666, "train": "D7597", "route": "广州东－福田", "arrival": "19:46", "pax": 554, "binStart": 1185}, {"row": 3555, "train": "D7490", "route": "福田－广州东", "arrival": "19:56", "pax": 6, "binStart": 1185}]}, {"start": 1200, "end": 1215, "label": "20:00-20:15", "total": 0, "trains": []}, {"start": 1215, "end": 1230, "label": "20:15-20:30", "total": 11, "trains": [{"row": 3669, "train": "D7598", "route": "福田－广州东", "arrival": "20:29", "pax": 11, "binStart": 1215}]}, {"start": 1230, "end": 1245, "label": "20:30-20:45", "total": 0, "trains": []}, {"start": 1245, "end": 1260, "label": "20:45-21:00", "total": 1919, "trains": [{"row": 1205, "train": "G6007", "route": "长沙南－深圳北", "arrival": "20:46", "pax": 1372, "binStart": 1245}, {"row": 56, "train": "G635", "route": "合肥南－福田", "arrival": "20:53", "pax": 547, "binStart": 1245}]}, {"start": 1260, "end": 1275, "label": "21:00-21:15", "total": 1760, "trains": [{"row": 79, "train": "G844", "route": "西安北－深圳北", "arrival": "21:00", "pax": 1317, "binStart": 1260}, {"row": 532, "train": "G2747", "route": "南昌－福田", "arrival": "21:05", "pax": 443, "binStart": 1260}]}, {"start": 1275, "end": 1290, "label": "21:15-21:30", "total": 0, "trains": []}, {"start": 1290, "end": 1305, "label": "21:30-21:45", "total": 1105, "trains": [{"row": 542, "train": "G2749", "route": "南昌西－深圳北", "arrival": "21:34", "pax": 442, "binStart": 1290}, {"row": 3618, "train": "D7575", "route": "广州东－福田", "arrival": "21:41", "pax": 663, "binStart": 1290}]}, {"start": 1305, "end": 1320, "label": "21:45-22:00", "total": 1043, "trains": [{"row": 589, "train": "G2775", "route": "九江－福田", "arrival": "21:47", "pax": 399, "binStart": 1305}, {"row": 2104, "train": "G8484", "route": "汕头－福田", "arrival": "21:53", "pax": 291, "binStart": 1305}, {"row": 422, "train": "G2709", "route": "武汉－福田", "arrival": "21:57", "pax": 348, "binStart": 1305}, {"row": 3590, "train": "D7566", "route": "福田－广州东", "arrival": "21:58", "pax": 5, "binStart": 1305}]}, {"start": 1320, "end": 1335, "label": "22:00-22:15", "total": 310, "trains": [{"row": 623, "train": "G2793", "route": "合肥南－福田", "arrival": "22:14", "pax": 310, "binStart": 1320}]}, {"start": 1335, "end": 1350, "label": "22:15-22:30", "total": 796, "trains": [{"row": 3398, "train": "D7333", "route": "梅州西－福田", "arrival": "22:19", "pax": 576, "binStart": 1335}, {"row": 68, "train": "G699", "route": "上海虹桥－深圳北", "arrival": "22:22", "pax": 220, "binStart": 1335}]}, {"start": 1350, "end": 1365, "label": "22:30-22:45", "total": 882, "trains": [{"row": 439, "train": "G2715", "route": "景德镇北－惠阳", "arrival": "22:34", "pax": 318, "binStart": 1350}, {"row": 3593, "train": "D7567", "route": "广州东－福田", "arrival": "22:40", "pax": 564, "binStart": 1350}]}, {"start": 1365, "end": 1380, "label": "22:45-23:00", "total": 617, "trains": [{"row": 552, "train": "G2754", "route": "张家港－深圳北", "arrival": "22:57", "pax": 617, "binStart": 1365}]}, {"start": 1380, "end": 1395, "label": "23:00-23:15", "total": 438, "trains": [{"row": 444, "train": "G2717", "route": "九江－深圳北", "arrival": "23:08", "pax": 438, "binStart": 1380}]}, {"start": 1395, "end": 1410, "label": "23:15-23:30", "total": 524, "trains": [{"row": 3562, "train": "D7557", "route": "广州东－福田", "arrival": "23:20", "pax": 336, "binStart": 1395}, {"row": 64, "train": "G697", "route": "南京南－深圳北", "arrival": "23:26", "pax": 188, "binStart": 1395}]}, {"start": 1410, "end": 1425, "label": "23:30-23:45", "total": 2544, "trains": [{"row": 1310, "train": "G6097", "route": "张家界西－深圳北", "arrival": "23:33", "pax": 1324, "binStart": 1410}, {"row": 675, "train": "G2920", "route": "北海－深圳北", "arrival": "23:38", "pax": 1220, "binStart": 1410}]}, {"start": 1425, "end": 1440, "label": "23:45-24:00", "total": 2080, "trains": [{"row": 1394, "train": "G6213", "route": "韶关－深圳北", "arrival": "23:48", "pax": 725, "binStart": 1425}, {"row": 1229, "train": "G6025", "route": "岳阳东－深圳北", "arrival": "23:54", "pax": 1355, "binStart": 1425}]}], "summary": {"date": "2026-03-01", "station": "深圳北", "totalPax": 63647, "trainCount": 120, "activeBins": 62, "peakLabel": "14:30-14:45", "peakTotal": 4699, "maxTotal": 4699, "stationCol": 81, "totalCol": 85}};
+    const bins = data.bins;
+    const summary = data.summary;
+    const fmt = new Intl.NumberFormat("zh-CN");
+
+    document.getElementById("totalPax").textContent = fmt.format(summary.totalPax);
+    document.getElementById("trainCount").textContent = fmt.format(summary.trainCount);
+    document.getElementById("peakLabel").textContent = summary.peakLabel;
+    document.getElementById("peakTotal").textContent = fmt.format(summary.peakTotal);
+
+    const svg = document.getElementById("chart");
+    const tip = document.getElementById("tooltip");
+    const NS = "http://www.w3.org/2000/svg";
+    const width = 1200;
+    const height = 640;
+    const margin = { left: 76, right: 34, top: 36, bottom: 78 };
+    const plotW = width - margin.left - margin.right;
+    const plotH = height - margin.top - margin.bottom;
+    const yMax = niceMax(Math.max(10, summary.maxTotal));
+    const stepX = plotW / (bins.length - 1);
+
+    function el(name, attrs = {}, parent = svg) {
+      const node = document.createElementNS(NS, name);
+      for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+      parent.appendChild(node);
+      return node;
+    }
+    function x(i) { return margin.left + i * stepX; }
+    function y(value) { return margin.top + plotH - (value / yMax) * plotH; }
+    function niceMax(value) {
+      const exp = Math.floor(Math.log10(value));
+      const base = Math.pow(10, exp);
+      const n = value / base;
+      const nice = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+      return nice * base;
+    }
+    function pathLine() {
+      return bins.map((b, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(2)} ${y(b.total).toFixed(2)}`).join(" ");
+    }
+    function pathArea() {
+      const baseY = y(0);
+      return `M ${x(0)} ${baseY} ` + bins.map((b, i) => `L ${x(i).toFixed(2)} ${y(b.total).toFixed(2)}`).join(" ") + ` L ${x(bins.length - 1)} ${baseY} Z`;
+    }
+
+    const grid = el("g", { class: "grid" });
+    const axis = el("g", { class: "axis" });
+
+    const yTicks = 5;
+    for (let t = 0; t <= yTicks; t++) {
+      const value = (yMax / yTicks) * t;
+      const yy = y(value);
+      el("line", { x1: margin.left, y1: yy, x2: width - margin.right, y2: yy }, grid);
+      const label = el("text", { x: margin.left - 12, y: yy + 4, "text-anchor": "end" }, axis);
+      label.textContent = fmt.format(Math.round(value));
+    }
+    el("line", { class: "axis-line", x1: margin.left, y1: y(0), x2: width - margin.right, y2: y(0) });
+    el("line", { class: "axis-line", x1: margin.left, y1: margin.top, x2: margin.left, y2: y(0) });
+
+    for (let hour = 0; hour <= 24; hour += 2) {
+      const i = Math.min(bins.length - 1, hour * 4);
+      const xx = margin.left + Math.min(hour * 60, 23 * 60 + 45) / (23 * 60 + 45) * plotW;
+      el("line", { x1: xx, y1: y(0), x2: xx, y2: y(0) + 6, stroke: "#9aa8b7" });
+      const label = el("text", { x: xx, y: y(0) + 28, "text-anchor": hour === 0 ? "start" : hour === 24 ? "end" : "middle" }, axis);
+      label.textContent = hour === 24 ? "24:00" : `${String(hour).padStart(2, "0")}:00`;
+    }
+
+    const yTitle = el("text", { x: 20, y: margin.top + 12, transform: `rotate(-90 20 ${margin.top + 12})`, "text-anchor": "end", fill: "#637083", "font-size": 13 });
+    yTitle.textContent = "客流量";
+    const xTitle = el("text", { x: width / 2, y: height - 20, "text-anchor": "middle", fill: "#637083", "font-size": 13 });
+    xTitle.textContent = "到达时间段";
+
+    el("path", { class: "flow-area", d: pathArea() });
+    el("path", { class: "flow-line", d: pathLine() });
+
+    bins.forEach((b, i) => {
+      if (b.total > 0) {
+        el("circle", { cx: x(i), cy: y(b.total), r: 3.2, fill: "#0f766e", opacity: 0.82 });
+      }
+    });
+
+    const focusLine = el("line", { class: "focus-line", y1: margin.top, y2: y(0) });
+    const focusDot = el("circle", { class: "focus-dot", r: 6 });
+
+    const overlays = el("g");
+    bins.forEach((b, i) => {
+      const bandX = i === 0 ? margin.left - stepX / 2 : x(i) - stepX / 2;
+      const bandW = i === bins.length - 1 ? stepX : stepX;
+      const rect = el("rect", {
+        class: "hover-band",
+        x: bandX,
+        y: margin.top,
+        width: bandW,
+        height: plotH,
+        "data-index": i
+      }, overlays);
+      rect.addEventListener("mousemove", (event) => showTooltip(event, b, i));
+      rect.addEventListener("mouseleave", hideTooltip);
+    });
+
+    function trainRows(trains) {
+      if (!trains.length) return '<div class="empty">该时间段无到达客流记录</div>';
+      return `<table>
+        <thead><tr><th>到达</th><th>车次 / 运行区间</th><th>客流</th></tr></thead>
+        <tbody>${trains.map(r => `<tr><td>${r.arrival}</td><td><strong>${r.train}</strong><br>${r.route}</td><td>${fmt.format(r.pax)}</td></tr>`).join("")}</tbody>
+      </table>`;
+    }
+    function showTooltip(event, b, i) {
+      focusLine.setAttribute("x1", x(i));
+      focusLine.setAttribute("x2", x(i));
+      focusLine.style.opacity = 1;
+      focusDot.setAttribute("cx", x(i));
+      focusDot.setAttribute("cy", y(b.total));
+      focusDot.style.opacity = 1;
+
+      tip.innerHTML = `<h2>${b.label}</h2>
+        <div class="total">到达客流：${fmt.format(b.total)} 人，车次：${b.trains.length} 趟</div>
+        ${trainRows(b.trains)}`;
+      tip.style.opacity = 1;
+      tip.setAttribute("aria-hidden", "false");
+
+      const pad = 14;
+      let left = event.clientX;
+      let top = event.clientY - 12;
+      tip.style.left = `${left}px`;
+      tip.style.top = `${top}px`;
+
+      requestAnimationFrame(() => {
+        const box = tip.getBoundingClientRect();
+        if (box.left < pad) left += pad - box.left;
+        if (box.right > window.innerWidth - pad) left -= box.right - (window.innerWidth - pad);
+        if (box.top < pad) top = event.clientY + 22;
+        tip.style.left = `${left}px`;
+        tip.style.top = `${top}px`;
+      });
+    }
+    function hideTooltip() {
+      tip.style.opacity = 0;
+      tip.setAttribute("aria-hidden", "true");
+      focusLine.style.opacity = 0;
+      focusDot.style.opacity = 0;
+    }
+  </script>
+</body>
+</html>

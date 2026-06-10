@@ -1,0 +1,4 @@
+﻿level,control_name,T_total,AvgTravelTime,T_core,T_belt,rho_peak_core,Imbalance
+Level 0,No control,0,62.193,0,0,0.1,0
+Level 1,Exit metering,0,61.58,0,0,0.1,0
+Level 2,Metering + gate guidance,0,61.179,0,0,0.1067,0

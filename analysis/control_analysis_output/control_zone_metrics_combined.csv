@@ -1,0 +1,13 @@
+﻿ZoneName,CurrentCount,CurrentDensity,CurrentMeanSpeed,IsCritical,CriticalDuration,TotalCriticalTime,CriticalEpisodeCount,PeakObservedDensity,MinObservedMeanSpeed,MaxObservedCount,ExperimentKey,Level,Label,Short,Order
+Zone_Belt_X6_8,0,0.0,0.0,False,0.0,0.0,0,0.1667,0.0,75,Burst_Baseline,Level 0,Level 0 No control,L0,0
+Zone_Core_X8,0,0.0,0.0,False,0.0,0.0,0,0.1067,0.0,16,Burst_Baseline,Level 0,Level 0 No control,L0,0
+Zone_Secondary_X19,0,0.0,0.0,False,0.0,0.0,0,0.1333,0.0,20,Burst_Baseline,Level 0,Level 0 No control,L0,0
+Zone_Spill_X9_10,0,0.0,0.0,False,0.0,0.0,0,0.08,0.0,24,Burst_Baseline,Level 0,Level 0 No control,L0,0
+Zone_Belt_X6_8,0,0.0,0.0,False,0.0,0.0,0,0.1756,0.0,79,Burst_MeteringOnly,Level 1,Level 1 Metering,L1,1
+Zone_Core_X8,0,0.0,0.0,False,0.0,0.0,0,0.1133,0.0,17,Burst_MeteringOnly,Level 1,Level 1 Metering,L1,1
+Zone_Secondary_X19,0,0.0,0.0,False,0.0,0.0,0,0.1333,0.0,20,Burst_MeteringOnly,Level 1,Level 1 Metering,L1,1
+Zone_Spill_X9_10,0,0.0,0.0,False,0.0,0.0,0,0.0833,0.0,25,Burst_MeteringOnly,Level 1,Level 1 Metering,L1,1
+Zone_Belt_X6_8,0,0.0,0.0,False,0.0,0.0,0,0.1667,0.0,75,Burst_Metering_GateGuidance,Level 2,Level 2 Metering + Gate guidance,L2,2
+Zone_Core_X8,0,0.0,0.0,False,0.0,0.0,0,0.1,0.0,15,Burst_Metering_GateGuidance,Level 2,Level 2 Metering + Gate guidance,L2,2
+Zone_Secondary_X19,0,0.0,0.0,False,0.0,0.0,0,0.1333,0.0,20,Burst_Metering_GateGuidance,Level 2,Level 2 Metering + Gate guidance,L2,2
+Zone_Spill_X9_10,0,0.0,0.0,False,0.0,0.0,0,0.0833,0.0,25,Burst_Metering_GateGuidance,Level 2,Level 2 Metering + Gate guidance,L2,2

@@ -1,0 +1,4 @@
+﻿level,short,control_name,T_total,AvgTravelTime,T_core,T_belt,rho_peak_core,Imbalance,data_type
+Level 0,L0,No control,848.09,62.193,580.0,610.0,0.2869,0.38,illustrative_assumption_not_simulation_output
+Level 1,L1,Exit metering,805.0,61.58,430.0,455.0,0.245,0.27,illustrative_assumption_not_simulation_output
+Level 2,L2,Metering + gate guidance,760.0,61.179,315.0,330.0,0.215,0.14,illustrative_assumption_not_simulation_output

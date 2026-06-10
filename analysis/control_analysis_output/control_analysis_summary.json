@@ -1,0 +1,63 @@
+{
+  "audit_control_triggered": false,
+  "rows": [
+    {
+      "Level": "Level 0",
+      "Label": "Level 0 No control",
+      "ActualCurrentLevel": "Level0_NoControl",
+      "InterventionCount": 0.0,
+      "TotalControlActiveTime": 0.0,
+      "TotalArrived": 3000.0,
+      "ArrivedChangeVsL0Pct": 0.0,
+      "TotalFailed": 1678.0,
+      "FailedReductionVsL0Pct": -0.0,
+      "AverageTravelTime": 61.819,
+      "TravelTimeReductionVsL0Pct": -0.0,
+      "PeakActiveAgents": 412.0,
+      "WrongExitCount": 1149.0,
+      "OutOfBoundsCount": 529.0,
+      "WallCollisionCount": 357025.0,
+      "PedestrianCollisionCount": 72858.0
+    },
+    {
+      "Level": "Level 1",
+      "Label": "Level 1 Metering",
+      "ActualCurrentLevel": "Level0_NoControl",
+      "InterventionCount": 0.0,
+      "TotalControlActiveTime": 0.0,
+      "TotalArrived": 2953.0,
+      "ArrivedChangeVsL0Pct": -1.5666666666666667,
+      "TotalFailed": 1730.0,
+      "FailedReductionVsL0Pct": -3.098927294398093,
+      "AverageTravelTime": 61.552,
+      "TravelTimeReductionVsL0Pct": 0.4319060483023067,
+      "PeakActiveAgents": 416.0,
+      "WrongExitCount": 1100.0,
+      "OutOfBoundsCount": 630.0,
+      "WallCollisionCount": 290046.0,
+      "PedestrianCollisionCount": 55216.0
+    },
+    {
+      "Level": "Level 2",
+      "Label": "Level 2 Metering + Gate guidance",
+      "ActualCurrentLevel": "Level0_NoControl",
+      "InterventionCount": 0.0,
+      "TotalControlActiveTime": 0.0,
+      "TotalArrived": 2992.0,
+      "ArrivedChangeVsL0Pct": -0.26666666666666666,
+      "TotalFailed": 1691.0,
+      "FailedReductionVsL0Pct": -0.7747318235995232,
+      "AverageTravelTime": 62.231,
+      "TravelTimeReductionVsL0Pct": -0.6664617674177826,
+      "PeakActiveAgents": 416.0,
+      "WrongExitCount": 1105.0,
+      "OutOfBoundsCount": 586.0,
+      "WallCollisionCount": 2043773.0,
+      "PedestrianCollisionCount": 69762.0
+    }
+  ],
+  "level1_failed_reduction_pct": -3.098927294398093,
+  "level1_ped_collision_reduction_pct": 24.214224930687088,
+  "level2_failed_reduction_pct": -0.7747318235995232,
+  "level2_wall_collision_change_pct_lower_is_better": -472.4453469644983
+}

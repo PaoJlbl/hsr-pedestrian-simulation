@@ -1,0 +1,13 @@
+﻿level,short,control_name,ZoneName,Role,CurrentCount,CurrentDensity,CurrentMeanSpeed,IsCritical,CriticalDuration,TotalCriticalTime,CriticalEpisodeCount,PeakObservedDensity,MinObservedMeanSpeed,MaxObservedCount
+Level 0,L0,No control,Zone_Core_X8,Core bottleneck cell_x=8,0,0.0,0.0,False,0.0,0.0,0,0.1,0.0,15
+Level 0,L0,No control,Zone_Belt_X6_8,Main bottleneck belt cell_x=6-8,0,0.0,0.0,False,0.0,0.0,0,0.1689,0.0,76
+Level 0,L0,No control,Zone_Spill_X9_10,Downstream spillover cell_x=9-10,0,0.0,0.0,False,0.0,0.0,0,0.0833,0.0,25
+Level 0,L0,No control,Zone_Secondary_X19,Secondary pressure cell_x=19,0,0.0,0.0,False,0.0,0.0,0,0.1333,0.0,20
+Level 1,L1,Exit metering,Zone_Core_X8,Core bottleneck cell_x=8,0,0.0,0.0,False,0.0,0.0,0,0.1,0.0,15
+Level 1,L1,Exit metering,Zone_Belt_X6_8,Main bottleneck belt cell_x=6-8,0,0.0,0.0,False,0.0,0.0,0,0.1689,0.0,76
+Level 1,L1,Exit metering,Zone_Spill_X9_10,Downstream spillover cell_x=9-10,0,0.0,0.0,False,0.0,0.0,0,0.08,0.0,24
+Level 1,L1,Exit metering,Zone_Secondary_X19,Secondary pressure cell_x=19,0,0.0,0.0,False,0.0,0.0,0,0.1333,0.0,20
+Level 2,L2,Metering + gate guidance,Zone_Core_X8,Core bottleneck cell_x=8,0,0.0,0.0,False,0.0,0.0,0,0.1067,0.0,16
+Level 2,L2,Metering + gate guidance,Zone_Belt_X6_8,Main bottleneck belt cell_x=6-8,0,0.0,0.0,False,0.0,0.0,0,0.1622,0.0,73
+Level 2,L2,Metering + gate guidance,Zone_Spill_X9_10,Downstream spillover cell_x=9-10,0,0.0,0.0,False,0.0,0.0,0,0.0833,0.0,25
+Level 2,L2,Metering + gate guidance,Zone_Secondary_X19,Secondary pressure cell_x=19,0,0.0,0.0,False,0.0,0.0,0,0.14,0.0,21

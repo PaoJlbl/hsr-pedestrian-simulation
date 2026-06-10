@@ -1,0 +1,5 @@
+﻿ZoneName,Role,CurrentCount,CurrentDensity,CurrentMeanSpeed,IsCritical,CriticalDuration,TotalCriticalTime,CriticalEpisodeCount,PeakObservedDensity,MinObservedMeanSpeed,MaxObservedCount
+Zone_Core_X8,Core bottleneck cell_x=8,0,0.0000,0.0000,False,0.000,0.000,0,0.1000,0.0000,15
+Zone_Belt_X6_8,Main bottleneck belt cell_x=6-8,0,0.0000,0.0000,False,0.000,0.000,0,0.1689,0.0000,76
+Zone_Spill_X9_10,Downstream spillover cell_x=9-10,0,0.0000,0.0000,False,0.000,0.000,0,0.0800,0.0000,24
+Zone_Secondary_X19,Secondary pressure cell_x=19,0,0.0000,0.0000,False,0.000,0.000,0,0.1333,0.0000,20

@@ -1,0 +1,60 @@
+# Unity generated directories
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+MemoryCaptures/
+
+# Unity generated files
+*.csproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+sysinfo.txt
+
+# Unity asset store tools
+AssetStoreTools*
+
+# ML-Agents training intermediates
+*.pt
+*.pt.meta
+events.out.tfevents*
+**/checkpoint.pt
+**/run_logs/
+**/run_logs.meta
+**/ML-Agents/Timers/
+**/LOG.txt
+**/training_status.json
+**/timers.json
+**/*_timers.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

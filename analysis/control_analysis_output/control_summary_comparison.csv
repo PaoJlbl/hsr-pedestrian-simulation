@@ -1,0 +1,4 @@
+﻿Level,Label,ActualCurrentLevel,InterventionCount,TotalControlActiveTime,TotalArrived,ArrivedChangeVsL0Pct,TotalFailed,FailedReductionVsL0Pct,AverageTravelTime,TravelTimeReductionVsL0Pct,PeakActiveAgents,WrongExitCount,OutOfBoundsCount,WallCollisionCount,PedestrianCollisionCount
+Level 0,Level 0 No control,Level0_NoControl,0.0,0.0,3000.0,0.0,1678.0,-0.0,61.819,-0.0,412.0,1149.0,529.0,357025.0,72858.0
+Level 1,Level 1 Metering,Level0_NoControl,0.0,0.0,2953.0,-1.5666666666666667,1730.0,-3.098927294398093,61.552,0.4319060483023067,416.0,1100.0,630.0,290046.0,55216.0
+Level 2,Level 2 Metering + Gate guidance,Level0_NoControl,0.0,0.0,2992.0,-0.26666666666666666,1691.0,-0.7747318235995232,62.231,-0.6664617674177826,416.0,1105.0,586.0,2043773.0,69762.0
