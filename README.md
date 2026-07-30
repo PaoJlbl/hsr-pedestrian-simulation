@@ -92,8 +92,8 @@ python -m pip install -r requirements.txt
 
 ```powershell
 python .\analysis\crowd_bottleneck_visualization.py --input .\unity\crowd_state_normal.csv --output .\analysis\crowd_analysis_normal_output
-python .\analysis\crowd_bottleneck_visualization.py --input .\unity\crowd_state_Burst.csv --output .\analysis\crowd_analysis_burst_output
-python .\analysis\control_effect_visualization.py --input-dir .\unity\ControlExport --output-dir .\analysis\control_analysis_output
+python .\analysis\crowd_bottleneck_visualization.py --csv .\unity\crowd_state_Burst.csv --output .\analysis\crowd_analysis_burst_output
+python .\analysis\control_effect_visualization.py --input .\unity\ControlExport --output .\analysis\control_analysis_output
 ```
 
 ## Git LFS 使用
@@ -107,17 +107,89 @@ git lfs pull
 
 如果未安装 Git LFS，Unity 场景中的模型或推理网络可能只显示为 LFS 指针文件，无法正常加载。
 
-## 复现实验流程
+## 大客流场景 Demo
 
-1. 克隆仓库并拉取 LFS 资产。
-2. 使用 Unity Hub 打开 `unity/`，Unity 版本建议为 `2022.3.62f3c1`。
-3. 打开 `Scene_FBX_CrowdInference.unity` 或 `Scene_FBX_BurstControl.unity`，检查预制体中的 Behavior Parameters 是否引用已保留的 ONNX 模型。
-4. 运行场景，生成或更新 `crowd_state_normal.csv`、`crowd_state_Burst.csv`、`ControlExport/` 指标文件。
-5. 使用 `analysis/` 下脚本生成瓶颈识别图表、管控对比图和报告。
+该 Demo 直接使用仓库中已有的 ONNX 模型进行推理，不需要重新训练 ML-Agents。推荐先运行无管控场景确认模型和站房环境正常，再运行管控场景进行对比。
+
+### 1. 拉取完整模型资产
+
+克隆仓库后进入项目根目录，确认 Git LFS 已安装并拉取大文件：
+
+```powershell
+git lfs install
+git lfs pull
+git lfs ls-files
+```
+
+确认以下两个文件是实际的 ONNX 二进制文件，而不是只有几行文本的 LFS 指针：
+
+- `unity/Assets/results/crowd_fbx_full_v1/PedestrianCrowdFBX.onnx`：深圳北站 FBX 大客流场景使用的模型。
+- `unity/Assets/results/crowd_stable_60agents_v1/PedestrianCrowd.onnx`：简化通道/基础运行场景使用的模型。
+
+### 2. 打开 Unity 工程
+
+1. 在 Unity Hub 中选择 `unity/` 作为项目目录。
+2. 使用 Unity `2022.3.62f3c1` 打开工程，等待首次导入 FBX、ONNX 和包依赖完成。
+3. 如果 Package Manager 提示恢复依赖，允许它根据 `Packages/manifest.json` 安装 ML-Agents `2.0.2` 和 AI Navigation `1.1.6`。
+4. 等待 Console 不再出现编译错误后再进入 Play Mode。`EditorBuildSettings` 当前没有预设场景列表，因此需要从 Project 窗口手动打开下述场景。
+
+### 3. 核验推理模型绑定
+
+在 Project 窗口打开 `Assets/prefabs/Pedestrian_CrowdFBXInference.prefab`，检查其 `Behavior Parameters`：
+
+- `Model` 指向 `PedestrianCrowdFBX.onnx`。
+- `Behavior Name` 为 `PedestrianCrowdFBX`。
+- `Behavior Type` 为 `Inference Only`。
+- `Inference Device` 保持 `Default`；如显卡推理出现兼容问题，可改为 CPU 后重试。
+
+基础运行预制体 `Assets/prefabs/Pedestrians_CrowdRuntime.prefab` 应绑定 `PedestrianCrowd.onnx`，其 `Behavior Name` 为 `PedestrianCrowd`、`Behavior Type` 同样为 `Inference Only`。如果 Inspector 中 `Model` 显示为 `None`，请从上述路径重新拖入对应 ONNX；不要将 Behavior Type 改为训练模式。
+
+### 4. 运行无管控大客流推理
+
+1. 双击打开 `Assets/Scenes/Scene_FBX_CrowdInference.unity`。
+2. 在 Hierarchy 中选中 `FBXFinalSceneController`，确认 `Agent Prefab` 引用 FBX 推理行人预制体，`Simulation Frame`、出生区域和东西侧出口均未丢失。
+3. 将场景设为 `Burst`。当前大客流默认参数为：出生区域索引 `1/3/5/7`、对应客流量 `1104/1295/1437/863`、到达持续时间 `600 s`、最大同时活动人数 `550`、对象池大小 `650`。
+4. 如果 `Auto Start On Play` 已勾选，点击 Unity 顶部 Play 即可；如果未勾选，进入 Play Mode 后使用左上角运行时 GUI 启动 `Burst` 场景。
+5. 观察行人是否从多个出生区域生成、沿站房空间移动并到达东西侧出口。运行时 GUI 会显示目标人数、已生成/到达/失败人数、当前活动人数、峰值人数、平均通行时间、出口分流和碰撞等指标。
+6. `CrowdStateLogger` 默认每 `0.5 s` 按 `30 x 3` 网格采样人数、密度和速度。该场景当前输出文件名为 `crowd_state_Burst.csv`，文件写入 `unity/` 项目根目录；每次重新进入 Play Mode 会覆盖同名文件。
+
+如果电脑无法流畅维持 550 个智能体，可先将 `Burst Max Active Agents` 调低到 `100-250` 验证流程；这只降低同时在场人数，不改变已有 ONNX 的推理方式。
+
+### 5. 运行大客流分级管控推理
+
+1. 停止前一个场景，双击打开 `Assets/Scenes/Scene_FBX_BurstControl.unity`。
+2. 再次确认 `FBXFinalSceneController` 使用相同的 `PedestrianCrowdFBX.onnx` 推理预制体，确保对比实验只改变管控策略。
+3. 在 Hierarchy 中选中 `FBXTrafficControlManager`：
+   - `Enable Control` 关闭时运行无管控基线；当前场景默认即为关闭，实验名为 `Burst_Base`。
+   - `Enable Control` 打开后启用分级管控；可分别开启 `Use Spawn Metering`、`Use Gate Guidance` 和 `Use Secondary Mild Guidance`。
+   - 默认限流区域为主区域 `1/3`、次区域 `5`；拥堵升级持续时间为 `8 s`。
+   - Level 1/2/3 的主区域放行倍率依次为 `0.70/0.50/0.35`，并逐级增加出口引导惩罚。
+4. 为避免覆盖和混淆结果，每组实验修改 `Experiment Name`，例如 `Burst_Base`、`Burst_MeteringOnly`、`Burst_Metering_GateGuidance`。
+5. 点击 Play 并启动 `Burst`。观察 `Current Level`、限流/导向激活状态、干预次数、等级切换次数和累计管控时间，并与无管控场景的峰值密度、碰撞和通行时间比较。
+6. 场景完成后，`Export On Scenario Finished` 会把汇总指标和分区指标写入 `unity/ControlExport/`。如需提前结束演示，应先记录屏幕指标；自动 CSV 导出以场景正常完成为准。
+
+### 6. 生成瓶颈识别与管控对比结果
+
+退出 Play Mode 后，在仓库根目录运行：
+
+```powershell
+python -m pip install -r requirements.txt
+python .\analysis\crowd_bottleneck_visualization.py --input .\unity\crowd_state_Burst.csv --output .\analysis\crowd_analysis_burst_output
+python .\analysis\control_effect_visualization.py --input-dir .\unity\ControlExport --output-dir .\analysis\control_analysis_output
+```
+
+瓶颈分析结果位于 `analysis/crowd_analysis_burst_output/`，包括密度/速度热力图、瓶颈评分、热点事件和 Markdown 报告；管控方案对比结果位于 `analysis/control_analysis_output/`。
+
+### 常见问题
+
+- 行人不生成：检查 `FBXFinalSceneController` 的 `Auto Start On Play`，或在运行时 GUI 中手动启动 `Burst`。
+- 行人原地不动：优先检查推理预制体的 ONNX、`Behavior Type = Inference Only`、Behavior Name，以及场景中的出口和 Simulation Frame 引用。
+- 模型显示丢失：执行 `git lfs pull`，确认 ONNX 文件不是 LFS 指针，再重新打开 Unity。
+- 大量行人越界或穿模：确认场景 FBX、NavMesh/碰撞体、预制体和 `.meta` 文件均完整导入，且没有修改 Simulation Space 的空间映射。
+- CSV 没有生成：确认已进入 Play Mode，`CrowdStateLogger` 组件启用，并检查文件是否写入 `unity/` 而不是 `Assets/`。
 
 ## 注意事项
 
 - 本仓库是毕业设计归档版，保留复现实验所需的核心资产，不包含 Unity `Library/`、`Logs/`、`UserSettings/` 等本地生成目录。
 - 已排除训练中间 `.pt` 权重、TensorBoard 事件日志和未被核心场景引用的大型 FBX 文件。
 - 如果需要重新训练 ML-Agents，请在本地重新生成训练结果，并按需选择最终 ONNX 模型纳入版本管理。
-
